@@ -3,6 +3,6 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "${BACKEND_URL}/api/:splat"
+  to = "https://techstore-backend-i9kh.onrender.com/api/:splat"
   status = 200
   force = true
