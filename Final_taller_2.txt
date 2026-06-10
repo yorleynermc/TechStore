@@ -1,0 +1,70 @@
+POLITÉCNICO COLOMBIANO JAIME ISAZA CADAVID
+FORMATO PARA REALIZACIÓN DE ACTIVIDADES EVALUATIVAS
+
+FACULTAD DE
+Ingeniería  
+PROGRAMA:
+  Ingeniería informática     Código:
+FD-GC195
+Versión: 03ASIGNATURACÓDIGO: INGOI 184NOMBRE:Taller II de programación     PROFESOR:Manolo Pajaro BorrasFECHA:11-jun-2026TIPO DE EVALUACIÓNTALLERQUIZPARCIALFINALOTRO – CUÁL?XNOMBRE:					  CÉDULA:			  NOTA:		
+
+Guía del Proyecto Final: Sistema Integral de Gestión y Ventas Online (E-Commerce Full-Stack)
+1. Descripción General del Proyecto
+El objetivo de este proyecto es diseñar y desarrollar una aplicación web completa y funcional basada en el modelo Cliente-Servidor. La aplicación permitirá la gestión integral de un catálogo de productos, la interacción fluida del usuario con dichos elementos y la persistencia segura de los datos mediante una base de datos.
+Flexibilidad del Proyecto: El sistema cuenta con la ventaja de ser completamente adaptable a cualquier nicho de mercado que el equipo decida trabajar (por ejemplo: venta de dispositivos móviles, artículos deportivos, alimentos, ropa, etc.).
+2. Requisitos Técnicos Obligatorios
+Para cumplir satisfactoriamente con las competencias de la materia, la estructura tecnológica de la aplicación debe integrar de forma estricta los siguientes puntos:
+* Arquitectura: Una separación física, clara e independiente entre la capa de presentación (Frontend / Cliente) y la capa de lógica de negocio (Backend / Servidor).
+* Backend: Desarrollo robusto del lado del servidor utilizando PHP (puro o mediante algún framework) o Node.js con Express.
+* Comunicación de Datos: Uso obligatorio del formato JSON como estándar exclusivo para el intercambio y transferencia de información entre el cliente y el servidor.
+* Persistencia (Base de Datos): El equipo podrá optar libremente por un motor de base de datos Relacional (MySQL / PostgreSQL) o No Relacional (MongoDB).
+* Despliegue: La aplicación terminada no debe limitarse al entorno local; debe estar alojada, operativa y accesible en internet a través de un servicio de Hosting.
+3. Alcance del Sistema (Funcionalidades Mínimas)
+El ecosistema de la aplicación debe estar dividido para interactuar bajo dos perfiles o niveles de acceso bien definidos:
+A. Módulo Público (Experiencia del Cliente/Comprador)
+* Catálogo Dinámico: Visualización atractiva de los productos cargados en tiempo real desde la base de datos.
+* Filtros Avanzados: Herramientas de búsqueda o filtrado preciso de elementos por categorías.
+* Detalle de Producto: Una vista individualizada que exponga detalladamente las especificaciones técnicas, precio e imagen de cada artículo.
+* Carrito de Compras / Pedido: Sistema interactivo para seleccionar múltiples productos, gestionar las cantidades y realizar un simulacro completo de la finalización de compra.
+B. Módulo Administrativo (Gestión Interna de la Tienda)
+* CRUD Completo de Inventario: Panel privado para Crear, Leer, Actualizar y Eliminar productos. Cada registro debe soportar obligatoriamente campos de imagen, precio, stock y descripción.
+* Gestión de Inventario: Implementación de controles y alertas visuales para el manejo y notificación automática de stock mínimo.
+* Dashboard Organizacional: Pantalla de bienvenida que muestre un resumen estadístico, métricas rápidas o un listado ágil de los productos que se encuentran activos en el sistema.
+4. Estructura de Documentación (Entregables)
+La documentación técnica es tan crucial como el código fuente. Se deben estructurar y entregar dos manuales con enfoques totalmente diferenciados:
+I. Manual de Usuario (Enfoque Funcional / No Técnico)
+* Introducción: Explicación clara y concisa del propósito general del sistema.
+* Guía de Navegación y Compra: Paso a paso detallado para el cliente sobre cómo navegar, buscar artículos, añadirlos al carrito y simular la orden de compra.
+* Guía de Administración: Manual procedimental orientado a los gestores de la tienda sobre cómo agregar, editar o dar de baja productos del inventario.
+II. Manual del Programador (Enfoque Técnico de Mantenimiento)
+* Arquitectura del Sistema: Diagrama de bloques detallado que ilustre con precisión el flujo de comunicación y la arquitectura física (Cliente -> API/Servidor -> Base de Datos).
+* Modelo de Datos: Diagrama Entidad-Relación formal (si se usó SQL) o un esquema estructurado de Colecciones y Documentos (si se optó por NoSQL).
+* Documentación de la API: Catálogo exhaustivo de endpoints (rutas del servidor), especificando métodos HTTP (GET, POST, PUT, DELETE) y ejemplos reales de las estructuras de los objetos JSON que se intercambian.
+* Manual de Despliegue Local: Pasos secuenciales y comandos requeridos para replicar, instalar dependencias y levantar exitosamente el entorno de desarrollo de forma local.
+* Ficha Tecnológica: Ficha técnica con las versiones exactas del software, entornos de ejecución y librerías utilizadas durante el proyecto.
+5. Hoja de Ruta Sugerida (Gestión de Tiempos)
+Para asegurar el éxito del proyecto, se aconseja distribuir el desarrollo a través de las siguientes fases planificadas:
+* Fase 1: Definición y Modelado (Semanas 2): Selección del nicho comercial, diseño formal del modelo de la base de datos y planeación teórica de las rutas de la API.
+* Fase 2: Desarrollo del Backend y API (Semanas 2): Configuración inicial del servidor (Express o PHP), programación de la conexión a la base de datos e implementación de las rutas que procesen JSON. Se deben testear los endpoints usando herramientas como Postman o Insomnia.
+* Fase 3: Frontend Dinámico (Semanas 3): Construcción de las interfaces de usuario interactivas y responsivas (HTML5, CSS3, JavaScript puro o Framework) consumiendo la API mediante Fetch o AJAX.
+* Fase 4: Integración y Calidad (Semanas 2): Robustecimiento del sistema mediante validación estricta de formularios, manejo controlado de excepciones (por ejemplo, caídas de la DB o llamadas a productos que no existen) y optimización de la experiencia de usuario (UX).
+* Fase 5: Despliegue y Cierre (Semanas 3): Migración completa del código y base de datos al hosting web, redacción de los manuales técnicos y pruebas finales directo en el entorno de producción real.
+
+
+6. Lista de Chequeo para la Evaluación del Proyecto
+Esta tabla representa exactamente los componentes básicos y los criterios bajo los cuales se evaluará la entrega del día miércoles 10 de junio. Asegúrese de cumplir cada uno de ellos antes del envío final.
+Componente EvaluadoRequisitos Específicos a VerificarEstado (Cumple / No Cumple)1. Funcionalidad del Sistema• Catálogo interactivo conectado directamente a la base de datos.
+• Filtros funcionales que segmenten correctamente por categorías.
+• Vista de especificaciones técnicas detalladas por producto.
+• Carrito que permita añadir elementos y simular la orden de compra.
+• CRUD Administrativo completamente funcional (con carga de imágenes, precios, descripción y stock).
+• Alertas operativas de stock mínimo y Dashboard con resumen de productos activos.2. Arquitectura de Software• Demostración de una separación física y lógica real entre la capa del Frontend (Cliente) y la capa de Backend (Servidor).3. Manejo e Intercambio de Datos• Integración exclusiva de objetos JSON estructurados para la transferencia y recepción de información en todas las peticiones asíncronas.4. Calidad Técnica del Código• Código fuente limpio, modular, debidamente organizado bajo buenas prácticas y con comentarios claros orientados al mantenimiento futuro.5. Despliegue en Entorno Real• Aplicación web en producción estable y completamente accesible para revisión mediante el uso de una URL pública proveída por el hosting.6. Entregables de Documentación• Manual de Usuario claro, instructivo y con lenguaje amigable no técnico.
+• Manual del Programador exhaustivo (incluyendo diagramas de bloques de la arquitectura, esquemas de bases de datos, documentación técnica de endpoints e instrucciones de instalación local).
+
+
+Nota Importante: El éxito real de este proyecto no radica meramente en lograr que la aplicación 'funcione'. El factor diferenciador evaluado será su capacidad de argumentar y demostrar con solvencia técnica cómo fluyen los datos de forma íntegra, segura y ordenada desde la base de datos hasta la pantalla del usuario final.
+usuario: techstore_admin
+contraseña: techstore_admin123
+mongodb+srv://techstore_admin:<db_password>@cluster0.mlcprrs.mongodb.net/?appName=Cluster0
+
+

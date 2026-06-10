@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechStore - Tienda de Productos Tecnológicos</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">🛒 TechStore</div>
+            <div class="nav-links">
+                <a href="index.html" class="active">Catálogo</a>
+                <a href="carrito.html" class="cart-link">Carrito <span id="cart-count" class="cart-count">0</span></a>
+                <a href="admin-login.html">Admin</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Catálogo de Productos</h1>
+
+        <div class="filters">
+            <input type="text" id="search" placeholder="Buscar producto..." class="search-input">
+            <select id="category-filter" class="category-select">
+                <option value="">Todas las categorías</option>
+                <option value="Audio">Audio</option>
+                <option value="Computadoras">Computadoras</option>
+                <option value="Perifericos">Periféricos</option>
+                <option value="Accesorios">Accesorios</option>
+            </select>
+        </div>
+
+        <div id="loading" class="loading hidden">Cargando productos...</div>
+        <div id="error" class="error hidden"></div>
+
+        <div id="productos" class="productos-grid">
+            <!-- Productos se cargan aquí -->
+        </div>
+
+        <div class="pagination">
+            <button id="prev-page" class="btn-secondary">← Anterior</button>
+            <span id="page-info">Página 1</span>
+            <button id="next-page" class="btn-secondary">Siguiente →</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 TechStore. Sistema de Gestión de Tienda Online.</p>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/carrito.js"></script>
+    <script src="js/catalogo.js"></script>
+</body>
+</html>
+

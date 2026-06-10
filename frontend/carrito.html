@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrito - TechStore</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">🛒 TechStore</div>
+            <div class="nav-links">
+                <a href="index.html">Catálogo</a>
+                <a href="carrito.html" class="cart-link active">Carrito <span id="cart-count" class="cart-count">0</span></a>
+                <a href="admin-login.html">Admin</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Mi Carrito</h1>
+
+        <div id="carrito-vacio" class="carrito-vacio">
+            <p>Tu carrito está vacío</p>
+            <a href="index.html" class="btn-primary">Volver al catálogo</a>
+        </div>
+
+        <div id="carrito-contenido" class="carrito-contenido hidden">
+            <table class="carrito-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Precio Unitario</th>
+                        <th>Cantidad</th>
+                        <th>Subtotal</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="carrito-items">
+                    <!-- Items se cargan aquí -->
+                </tbody>
+            </table>
+
+            <div class="carrito-resumen">
+                <div class="resumen-item">
+                    <strong>Subtotal:</strong>
+                    <span id="subtotal">$0</span>
+                </div>
+                <div class="resumen-item">
+                    <strong>Total:</strong>
+                    <span id="total" class="total-price">$0</span>
+                </div>
+            </div>
+
+            <div class="carrito-acciones">
+                <button id="limpiar-carrito" class="btn-secondary">Limpiar carrito</button>
+                <button id="finalizar-compra" class="btn-primary">Finalizar compra</button>
+            </div>
+        </div>
+
+        <div id="checkout-success" class="checkout-success hidden">
+            <h2>¡Compra realizada exitosamente!</h2>
+            <p>Tu orden simulada ha sido procesada.</p>
+            <div id="checkout-resumen"></div>
+            <a href="index.html" class="btn-primary">Volver al catálogo</a>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 TechStore. Sistema de Gestión de Tienda Online.</p>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/carrito.js"></script>
+    <script src="js/carrito-page.js"></script>
+</body>
+</html>
+
+

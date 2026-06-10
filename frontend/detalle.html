@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle de Producto - TechStore</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">🛒 TechStore</div>
+            <div class="nav-links">
+                <a href="index.html">Catálogo</a>
+                <a href="carrito.html" class="cart-link">Carrito <span id="cart-count" class="cart-count">0</span></a>
+                <a href="admin-login.html">Admin</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <a href="index.html" class="back-link">← Volver al catálogo</a>
+
+        <div id="loading" class="loading hidden">Cargando producto...</div>
+        <div id="error" class="error hidden"></div>
+
+        <div id="product-detail" class="product-detail hidden">
+            <div class="product-image">
+                <img id="img" src="" alt="Producto" />
+            </div>
+            <div class="product-info">
+                <h1 id="nombre"></h1>
+                <p class="categoria" id="categoria"></p>
+                <p class="descripcion" id="descripcion"></p>
+
+                <div class="product-meta">
+                    <div class="price" id="precio"></div>
+                    <div class="stock" id="stock"></div>
+                </div>
+
+                <div class="product-actions">
+                    <input type="number" id="cantidad" min="1" value="1" class="cantidad-input">
+                    <button id="add-to-cart" class="btn-primary">Agregar al carrito</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 TechStore. Sistema de Gestión de Tienda Online.</p>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/carrito.js"></script>
+    <script src="js/detalle.js"></script>
+</body>
+</html>
+

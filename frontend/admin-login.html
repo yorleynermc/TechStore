@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Iniciar Sesión - TechStore</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">🛒 TechStore</div>
+            <div class="nav-links">
+                <a href="index.html">Catálogo</a>
+                <a href="carrito.html" class="cart-link">Carrito <span id="cart-count" class="cart-count">0</span></a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container login-container">
+        <div class="login-form">
+            <h1>Acceso Administrativo</h1>
+
+            <div id="error" class="error hidden"></div>
+
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username">Usuario:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Contraseña:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+
+                <button type="submit" class="btn-primary">Iniciar sesión</button>
+            </form>
+
+            <p class="hint">Usuario: techstore_admin | Contraseña: techstore_admin123</p>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 TechStore. Sistema de Gestión de Tienda Online.</p>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/admin-login.js"></script>
+</body>
+</html>
+
