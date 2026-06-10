@@ -1,5 +1,7 @@
 let currentPage = 1;
 let itemsPerPage = 10;
+// Cache de productos para evitar inyectar datos en atributos onclick
+let productosCache = {};
 
 async function loadProductos(page = 1) {
     const loading = document.getElementById('loading');
@@ -41,6 +43,9 @@ function displayProductos(productos) {
         return;
     }
 
+    // Guardar en cache para acceder sin pasar datos en onclick
+    productos.forEach(p => { productosCache[p._id] = p; });
+
     productosDiv.innerHTML = productos.map(p => `
         <div class="product-card" onclick="goToDetail('${p._id}')">
             <div class="product-card-img">
@@ -55,7 +60,7 @@ function displayProductos(productos) {
                 <div class="product-card-stock ${p.stock === 0 ? 'agotado' : ''}">
                     ${p.stock > 0 ? `Stock: ${p.stock}` : 'AGOTADO'}
                 </div>
-                <button class="product-card-btn" onclick="event.stopPropagation(); addToCartQuick('${p._id}', '${p.nombre}', ${p.precio}, ${p.stock})">
+                <button class="product-card-btn" onclick="event.stopPropagation(); addToCartQuick('${p._id}')">
                     ${p.stock > 0 ? 'Agregar' : 'Sin stock'}
                 </button>
             </div>
@@ -78,13 +83,13 @@ function goToDetail(productId) {
     window.location.href = `detalle.html?id=${productId}`;
 }
 
-async function addToCartQuick(productId, nombre, precio, stock) {
-    if (stock <= 0) {
+function addToCartQuick(productId) {
+    const p = productosCache[productId];
+    if (!p || p.stock <= 0) {
         alert('Producto sin stock');
         return;
     }
-
-    carrito.addToCart({ _id: productId, nombre, precio, stock }, 1);
+    carrito.addToCart({ _id: p._id, nombre: p.nombre, precio: p.precio, stock: p.stock }, 1);
     alert('Producto agregado al carrito');
 }
 
@@ -100,4 +105,3 @@ document.getElementById('next-page').addEventListener('click', () => {
 
 // Cargar productos al abrir página
 loadProductos(1);
-

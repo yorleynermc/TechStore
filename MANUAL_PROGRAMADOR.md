@@ -160,7 +160,7 @@ Autentica un administrador y retorna JWT.
 }
 ```
 
-**Response (201):**
+**Response (200):**
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhMjczZmVkOTQ4NGEwNDNiYjQ4ZmMwMSIsInVzZXJuYW1lIjoidGVjaHN0b3JlX2FkbWluIiwicm9sZSI6ImFkbWluIn0.xxx"

@@ -1,9 +1,12 @@
-// Verificar autenticación
-if (!api.token) {
+// Verificar autenticación: leer directamente desde localStorage para que
+// la sesión persista entre recargas de página sin requerir nuevo login.
+if (!localStorage.getItem('adminToken')) {
     window.location.href = 'admin-login.html';
 }
 
 let editingProductoId = null;
+// Cache de productos para evitar inyectar datos en atributos onclick
+let productosCache = {};
 
 // Tab Navigation
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -58,6 +61,9 @@ async function loadProductosList() {
         const datos = await api.getProductos({ limit: 100 });
         const listDiv = document.getElementById('productos-list');
 
+        // Guardar en cache para acceder sin pasar datos en onclick
+        datos.data.forEach(p => { productosCache[p._id] = p; });
+
         if (datos.data.length === 0) {
             listDiv.innerHTML = '<p>No hay productos</p>';
         } else {
@@ -67,7 +73,7 @@ async function loadProductosList() {
                         <strong>${p.nombre}</strong> - $${p.precio} - Stock: ${p.stock}
                     </div>
                     <div class="admin-product-actions">
-                        <button class="btn-edit" onclick="editProducto('${p._id}', '${p.nombre}', '${p.categoria}', ${p.precio}, ${p.stock}, ${p.minimoStock}, '${p.descripcion}', '${p.imagen}', ${p.activo})">
+                        <button class="btn-edit" onclick="editProducto('${p._id}')">
                             Editar
                         </button>
                     </div>
@@ -82,17 +88,20 @@ async function loadProductosList() {
     }
 }
 
-function editProducto(id, nombre, categoria, precio, stock, minimoStock, descripcion, imagen, activo) {
+function editProducto(id) {
+    const p = productosCache[id];
+    if (!p) return;
+
     editingProductoId = id;
     document.getElementById('form-title').textContent = 'Editar Producto';
-    document.getElementById('form-nombre').value = nombre;
-    document.getElementById('form-categoria').value = categoria;
-    document.getElementById('form-precio').value = precio;
-    document.getElementById('form-stock').value = stock;
-    document.getElementById('form-minimo').value = minimoStock;
-    document.getElementById('form-descripcion').value = descripcion;
-    document.getElementById('form-imagen').value = imagen;
-    document.getElementById('form-activo').checked = activo;
+    document.getElementById('form-nombre').value = p.nombre;
+    document.getElementById('form-categoria').value = p.categoria;
+    document.getElementById('form-precio').value = p.precio;
+    document.getElementById('form-stock').value = p.stock;
+    document.getElementById('form-minimo').value = p.minimoStock;
+    document.getElementById('form-descripcion').value = p.descripcion;
+    document.getElementById('form-imagen').value = p.imagen;
+    document.getElementById('form-activo').checked = p.activo;
     document.getElementById('cancel-btn').classList.remove('hidden');
 
     document.querySelector('.tab-btn[data-tab="productos"]').click();
@@ -205,4 +214,3 @@ async function deleteProducto(id) {
 
 // Cargar dashboard al abrir
 loadDashboard();
-

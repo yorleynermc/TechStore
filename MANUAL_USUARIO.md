@@ -15,7 +15,7 @@ TechStore es una plataforma diseñada para:
 ### Para Clientes
 
 1. Abre tu navegador web
-2. Ingresa la URL: `http://localhost:3000`
+2. Ingresa la URL: `https://techstore-yorleyner.netlify.app`
 3. Verás la página de inicio con el catálogo de productos
 
 ### Para Administradores
@@ -266,8 +266,8 @@ Sí, se muestran 10 por página. Usa paginación para navegar.
 ## 6. Solución de Problemas
 
 ### El sitio no carga
-- Verifica que estés en: `http://localhost:3000`
-- Revisa que el backend esté ejecutándose (`npm run dev`)
+- Verifica que estés en: `https://techstore-yorleyner.netlify.app`
+- Si pruebas en local, abre los archivos HTML directamente en el navegador
 - Recarga la página (F5)
 
 ### No puedo loguearme como admin

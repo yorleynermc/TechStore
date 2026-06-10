@@ -6,7 +6,7 @@ const API_BASE_URL = window.location.hostname === 'localhost' ?
 // El token JWT se persiste en localStorage para sobrevivir recargas de página.
 class TechStoreAPI {
     constructor() {
-        this.token = localStorage.getItem('admin_token');
+        this.token = localStorage.getItem('adminToken');
     }
 
     async request(endpoint, options = {}) {
@@ -24,7 +24,7 @@ class TechStoreAPI {
 
         // Token expirado o inválido: limpiar sesión y redirigir al login.
         if (response.status === 401) {
-            localStorage.removeItem('admin_token');
+            localStorage.removeItem('adminToken');
             window.location.href = 'admin-login.html';
         }
 
@@ -44,13 +44,13 @@ class TechStoreAPI {
             body: JSON.stringify({ username, password })
         });
         this.token = data.token;
-        localStorage.setItem('admin_token', this.token);
+        localStorage.setItem('adminToken', this.token);
         return data;
     }
 
     logout() {
         this.token = null;
-        localStorage.removeItem('admin_token');
+        localStorage.removeItem('adminToken');
     }
 
     // PRODUCTOS - Público
