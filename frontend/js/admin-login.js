@@ -1,3 +1,7 @@
+if (localStorage.getItem('adminToken')) {
+    window.location.href = 'admin.html';
+}
+
 document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
 
