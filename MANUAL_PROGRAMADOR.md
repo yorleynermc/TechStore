@@ -2,104 +2,190 @@
 
 ## 1. Introducción
 
-Este documento describe la arquitectura técnica, estructura de datos y endpoints de la API REST de TechStore, un sistema de e-commerce full-stack para la venta de productos tecnológicos.
+Este documento describe la arquitectura técnica, modelo de datos, endpoints de la API y procedimientos de instalación y despliegue de **TechStore**, un sistema de e-commerce full-stack para la venta de productos tecnológicos.
 
-**Stack tecnológico:**
-- Backend: Node.js + Express.js
-- Base de datos: MongoDB
-- Frontend: HTML5 + CSS3 + JavaScript (vanilla)
-- Autenticación: JWT (JSON Web Tokens)
+### URLs del Proyecto
+
+| Recurso | URL |
+|---|---|
+| **Frontend (producción)** | https://techstore-yorleyner.netlify.app |
+| **Backend (producción)** | https://techstore-backend-i9kh.onrender.com |
+| **Repositorio GitHub** | https://github.com/yorleynermc/TechStore |
+
+### Stack Tecnológico
+
+| Capa | Tecnología | Versión |
+|---|---|---|
+| Frontend | HTML5 + CSS3 + JavaScript vanilla | — |
+| Backend | Node.js + Express.js | Node ≥ 18, Express ^5.2.1 |
+| Base de datos | MongoDB Atlas (cloud) | Mongoose ^8.24.0 |
+| Autenticación | JWT (JSON Web Tokens) | jsonwebtoken ^9.0.2 |
+| Cifrado | bcryptjs | ^2.4.3 |
+| Hosting frontend | Netlify (CDN estático) | — |
+| Hosting backend | Render (servicio web Node.js) | — |
 
 ---
 
 ## 2. Arquitectura del Sistema
 
-### Diagrama de Flujo
+### Diagrama de Producción
 
 ```
-┌─────────────────────┐
-│   CLIENTE (Browser) │
-│  Frontend HTML/CSS  │
-│   JavaScript        │
-└──────────┬──────────┘
-           │
-           │ HTTP/JSON
-           │
-┌──────────▼──────────────────────┐
-│     Backend Express.js           │
-│  ┌──────────────────────────┐   │
-│  │  Routes & Controllers    │   │
-│  │  - Auth (Login)          │   │
-│  │  - Productos (CRUD)      │   │
-│  │  - Checkout              │   │
-│  └──────────────────────────┘   │
-│  ┌──────────────────────────┐   │
-│  │  Middleware              │   │
-│  │  - JWT Auth              │   │
-│  │  - CORS                  │   │
-│  │  - JSON Parser           │   │
-│  └──────────────────────────┘   │
-└──────────┬──────────────────────┘
-           │
-           │ Mongoose ODM
-           │
-┌──────────▼──────────────────────┐
-│    MongoDB (Base de Datos)       │
-│  ┌────────────────┐              │
-│  │ Colecciones:   │              │
-│  │ - productos    │              │
-│  │ - admins       │              │
-│  └────────────────┘              │
-└──────────────────────────────────┘
+┌──────────────────────────────────────────┐
+│         CLIENTE (Navegador Web)           │
+│   HTML5 + CSS3 + JavaScript vanilla       │
+│   Servido desde Netlify CDN               │
+└────────────┬─────────────────────────────┘
+             │
+             │ HTTPS  (/api/*)
+             │ Netlify reescribe la ruta:
+             │ /api/* → https://techstore-backend-i9kh.onrender.com/api/*
+             │
+┌────────────▼─────────────────────────────┐
+│         BACKEND  (Render)                 │
+│   Node.js + Express.js                   │
+│                                          │
+│  ┌────────────────────────────────────┐  │
+│  │  Rutas                             │  │
+│  │  POST  /api/auth/login             │  │
+│  │  GET   /api/productos              │  │
+│  │  GET   /api/productos/:id          │  │
+│  │  POST  /api/productos/carrito/...  │  │
+│  │  GET   /api/productos/dashboard    │  │
+│  │  GET   /api/productos/stock-bajo   │  │
+│  │  POST  /api/productos              │  │
+│  │  PUT   /api/productos/:id          │  │
+│  │  DELETE /api/productos/:id         │  │
+│  └────────────────────────────────────┘  │
+│  ┌────────────────────────────────────┐  │
+│  │  Middleware                        │  │
+│  │  - CORS (abierto)                  │  │
+│  │  - JSON Parser (límite 5 MB)       │  │
+│  │  - JWT Auth (rutas protegidas)     │  │
+│  └────────────────────────────────────┘  │
+└────────────┬─────────────────────────────┘
+             │
+             │ Mongoose ODM (TLS)
+             │
+┌────────────▼─────────────────────────────┐
+│         MongoDB Atlas (Cloud)             │
+│   Colecciones:                           │
+│   - productos                            │
+│   - admins                               │
+└──────────────────────────────────────────┘
 ```
+
+### Flujo de Proxy en Producción
+
+El frontend está alojado en Netlify como un sitio estático. Todas las peticiones al path `/api/*` son interceptadas por Netlify y redirigidas al backend en Render mediante un proxy definido en `netlify.toml`:
+
+```toml
+[[redirects]]
+  from   = "/api/*"
+  to     = "https://techstore-backend-i9kh.onrender.com/api/:splat"
+  status = 200
+  force  = true
+```
+
+Esto elimina problemas de CORS en producción: desde el punto de vista del navegador, el frontend y la API están en el mismo dominio (`techstore-yorleyner.netlify.app`).
 
 ### Separación de Capas
 
-**Frontend (Cliente):**
-- Presentación de catálogo de productos
-- Interacción del usuario (carrito, búsqueda)
-- Panel administrativo
-- Almacenamiento local (localStorage) para carrito
+**Frontend (Cliente — Netlify):**
+- Presentación del catálogo de productos (index.html)
+- Vista de detalle de producto (detalle.html)
+- Carrito de compras con persistencia en localStorage (carrito.html)
+- Panel administrativo con CRUD de productos (admin.html)
+- Autenticación: token JWT almacenado en `localStorage` bajo la clave `adminToken`
 
-**Backend (Servidor):**
-- Lógica de negocio (CRUD de productos)
+**Backend (Servidor — Render):**
+- Lógica de negocio: CRUD de productos
+- Autenticación y autorización con JWT
 - Validaciones de datos
-- Autenticación y autorización
-- Gestión de stock
-- Comunicación con BD
+- Gestión de stock con operaciones atómicas
+- Comunicación con MongoDB Atlas
 
-**Base de Datos:**
-- Persistencia de datos
-- Índices para búsqueda rápida
+**Base de Datos (MongoDB Atlas):**
+- Persistencia de productos y administradores
+- Búsqueda full-text con expresiones regulares vía Mongoose
 
 ---
 
-## 3. Modelo de Datos
+## 3. Estructura de Carpetas
+
+```
+TechStore/
+├── frontend/                    # Archivos estáticos servidos por Netlify
+│   ├── index.html               # Catálogo público con filtros y paginación
+│   ├── detalle.html             # Detalle de producto individual
+│   ├── carrito.html             # Carrito de compras y checkout simulado
+│   ├── admin-login.html         # Formulario de autenticación admin
+│   ├── admin.html               # Panel administrativo (CRUD + dashboard)
+│   ├── styles.css               # Estilos globales
+│   └── js/
+│       ├── api.js               # Clase TechStoreAPI (cliente HTTP centralizado)
+│       ├── carrito.js           # Clase CarritoManager (persistencia localStorage)
+│       ├── catalogo.js          # Lógica del catálogo: filtros, paginación, cards
+│       ├── detalle.js           # Lógica de la página de detalle
+│       ├── carrito-page.js      # Lógica de la página del carrito y checkout
+│       ├── admin-login.js       # Lógica del formulario de login
+│       └── admin-panel.js       # Lógica del panel admin: CRUD y dashboard
+│
+├── backend/                     # API REST servida por Render
+│   ├── server.js                # Punto de entrada: Express, middleware, rutas
+│   ├── package.json             # Dependencias y scripts npm
+│   ├── .env.example             # Plantilla de variables de entorno
+│   ├── seedAdmin.js             # Script para crear el usuario admin inicial
+│   ├── seedProductos.js         # Script para poblar productos de prueba
+│   └── src/
+│       ├── config/
+│       │   └── database.js      # Conexión a MongoDB con Mongoose
+│       ├── models/
+│       │   ├── Producto.js      # Schema Mongoose del producto
+│       │   └── Admin.js         # Schema Mongoose del administrador
+│       ├── routes/
+│       │   ├── authRoutes.js    # Ruta POST /auth/login
+│       │   └── productoRoutes.js # Todas las rutas de /productos
+│       ├── controllers/
+│       │   ├── authController.js     # Lógica de login con JWT
+│       │   └── productoController.js # Lógica CRUD, dashboard, checkout
+│       └── middleware/
+│           └── authMiddleware.js     # Verificación de token JWT
+│
+├── netlify.toml                 # Config de Netlify: directorio y regla de proxy
+├── render.yaml                  # Config de Render: tipo, directorio raíz, scripts
+├── MANUAL_USUARIO.md
+└── MANUAL_PROGRAMADOR.md
+```
+
+---
+
+## 4. Modelo de Datos
 
 ### Colección: `productos`
 
 ```javascript
 {
-  _id: ObjectId,
-  nombre: String (requerido, trimmed),
-  descripcion: String (requerido),
-  precio: Number (requerido, >= 0),
-  stock: Number (requerido, >= 0),
-  categoria: String (requerido),
-  imagen: String (default: ""),
-  minimoStock: Number (default: 0),
-  activo: Boolean (default: true),
-  createdAt: Date (automático),
-  updatedAt: Date (automático)
+  _id:         ObjectId,           // generado automáticamente
+  nombre:      String,  required, trim
+  descripcion: String,  required
+  precio:      Number,  required, min: 0
+  stock:       Number,  required, min: 0
+  categoria:   String,  required   // "Audio" | "Celulares" | "Computadoras" | "Perifericos" | "Accesorios"
+  imagen:      String,  default: ""
+  minimoStock: Number,  default: 0, min: 0
+  activo:      Boolean, default: true
+  createdAt:   Date     // timestamps automáticos (Mongoose)
+  updatedAt:   Date
 }
 ```
 
-**Ejemplo:**
+**Documento de ejemplo:**
 ```json
 {
   "_id": "507f1f77bcf86cd799439011",
   "nombre": "Laptop ASUS VivoBook 15",
-  "descripcion": "Laptop de alto rendimiento con procesador Intel i7",
+  "descripcion": "Laptop de alto rendimiento con procesador Intel i7, 16GB RAM, 512GB SSD",
   "precio": 1299999,
   "stock": 8,
   "categoria": "Computadoras",
@@ -115,42 +201,52 @@ Este documento describe la arquitectura técnica, estructura de datos y endpoint
 
 ```javascript
 {
-  _id: ObjectId,
-  username: String (requerido, único),
-  password: String (requerido, hasheado con bcryptjs),
-  role: String (default: "admin"),
-  createdAt: Date (automático),
-  updatedAt: Date (automático)
+  _id:       ObjectId,
+  username:  String,  required, unique
+  password:  String,  required  // hash bcryptjs, 10 salt rounds
+  role:      String,  default: "admin"
+  createdAt: Date
+  updatedAt: Date
 }
 ```
 
 ---
 
-## 4. Autenticación y Autorización
+## 5. Autenticación y Autorización
 
-### Flujo de Autenticación JWT
+### Flujo JWT
 
-1. Admin envía credenciales (username, password) a `POST /api/auth/login`
-2. Backend verifica credenciales contra BD
-3. Si son válidas, genera JWT con payload `{ id, username, role }`
-4. Token tiene duración de 8 horas
-5. Cliente almacena token en localStorage
-6. Token se envía en header `Authorization: Bearer <token>` en futuras peticiones
-7. Middleware `protegerRuta` valida token en rutas protegidas
+1. El admin envía `POST /api/auth/login` con `{ username, password }`
+2. El backend busca el usuario en MongoDB y compara la contraseña con `bcrypt.compare()`
+3. Si es válida, firma un JWT con payload `{ id, username, role }` y expiración de 8 horas
+4. El cliente guarda el token en `localStorage` con la clave `adminToken`
+5. Cada petición a rutas protegidas incluye el header `Authorization: Bearer <token>`
+6. El middleware `protegerRuta` verifica la firma, extrae el `id` y confirma que el admin aún existe en BD
 
-**Rutas públicas:** GET de productos, checkout
-**Rutas protegidas:** CRUD de productos, dashboard, stock bajo
+### Rutas públicas vs. protegidas
+
+| Tipo | Rutas |
+|---|---|
+| **Pública** | `GET /api/productos`, `GET /api/productos/:id`, `POST /api/productos/carrito/checkout` |
+| **Protegida (admin)** | `POST /api/productos`, `PUT /api/productos/:id`, `DELETE /api/productos/:id`, `GET /api/productos/dashboard`, `GET /api/productos/stock-bajo` |
+
+### Persistencia de sesión en el frontend
+
+El token se almacena en `localStorage['adminToken']`. Al cargar `admin.html`, el script verifica su presencia antes de renderizar el panel. Si no existe, redirige a `admin-login.html`. Al cargar `admin-login.html`, si el token ya existe, redirige directamente a `admin.html` sin mostrar el formulario.
 
 ---
 
-## 5. Documentación de Endpoints API
+## 6. Documentación de Endpoints API
 
-### Base URL: `http://localhost:3000/api`
+### Base URL (producción): `https://techstore-backend-i9kh.onrender.com/api`
+### Base URL (local): `http://localhost:3000/api`
 
-### 5.1 Autenticación
+---
 
-#### POST `/auth/login`
-Autentica un administrador y retorna JWT.
+### 6.1 Autenticación
+
+#### `POST /auth/login`
+Autentica al administrador y retorna un JWT de 8 horas.
 
 **Request:**
 ```json
@@ -160,82 +256,77 @@ Autentica un administrador y retorna JWT.
 }
 ```
 
-**Response (200):**
+**Response `200`:**
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhMjczZmVkOTQ4NGEwNDNiYjQ4ZmMwMSIsInVzZXJuYW1lIjoidGVjaHN0b3JlX2FkbWluIiwicm9sZSI6ImFkbWluIn0.xxx"
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
-**Errors:**
-- `400`: Username o password faltantes
-- `401`: Credenciales inválidas
+**Errores:**
+- `400` — Username o password faltantes
+- `401` — Credenciales inválidas
 
 ---
 
-### 5.2 Productos (Público)
+### 6.2 Productos — Rutas públicas
 
-#### GET `/productos?categoria=&q=&page=&limit=`
-Obtiene listado de productos con filtros y paginación.
+#### `GET /productos`
+Listado paginado de productos con filtros opcionales.
 
-**Query Parameters:**
-- `categoria` (string, opcional): filtrar por categoría
-- `q` (string, opcional): búsqueda por nombre/descripción (case-insensitive)
-- `page` (number, default: 1): número de página
-- `limit` (number, default: 10): items por página
-- `activo` (boolean, opcional): filtrar por estado
+**Query parameters:**
 
-**Response (200):**
+| Parámetro | Tipo | Default | Descripción |
+|---|---|---|---|
+| `categoria` | string | — | Filtrar por categoría exacta |
+| `q` | string | — | Búsqueda en nombre y descripción (case-insensitive) |
+| `page` | number | 1 | Número de página |
+| `limit` | number | 10 | Resultados por página |
+| `activo` | boolean | — | Filtrar por estado activo/inactivo |
+
+**Response `200`:**
 ```json
 {
-  "total": 8,
+  "total": 9,
   "page": 1,
   "limit": 10,
   "data": [
     {
       "_id": "507f1f77bcf86cd799439011",
       "nombre": "Laptop ASUS VivoBook 15",
+      "descripcion": "Laptop de alto rendimiento...",
       "precio": 1299999,
       "stock": 8,
       "categoria": "Computadoras",
-      ...
+      "imagen": "https://example.com/laptop.jpg",
+      "minimoStock": 2,
+      "activo": true,
+      "createdAt": "2026-06-08T22:22:19.795Z",
+      "updatedAt": "2026-06-08T22:22:19.795Z"
     }
   ]
 }
 ```
 
 **Ejemplo:**
-```bash
+```
 GET /productos?categoria=Audio&q=sony&page=1&limit=5
 ```
 
 ---
 
-#### GET `/productos/:id`
-Obtiene detalles de un producto específico.
+#### `GET /productos/:id`
+Detalle completo de un producto por su ObjectId.
 
-**Response (200):**
-```json
-{
-  "_id": "507f1f77bcf86cd799439011",
-  "nombre": "Laptop ASUS VivoBook 15",
-  "descripcion": "Laptop de alto rendimiento...",
-  "precio": 1299999,
-  "stock": 8,
-  "categoria": "Computadoras",
-  ...
-}
-```
+**Response `200`:** objeto producto completo (mismo esquema que los items del listado)
 
-**Errors:**
-- `404`: Producto no encontrado
+**Errores:**
+- `404` — Producto no encontrado
 
 ---
 
-### 5.3 Carrito (Público)
-
-#### POST `/productos/carrito/checkout`
-Simula una compra, decrementa stock de forma atómica.
+#### `POST /productos/carrito/checkout`
+Simula una compra. Decrementa el stock de cada item de forma atómica. Si algún item falla por stock insuficiente, se revierte (rollback) el stock de los items ya procesados.
 
 **Request:**
 ```json
@@ -247,344 +338,302 @@ Simula una compra, decrementa stock de forma atómica.
 }
 ```
 
-**Response (200):**
+**Response `200`:**
 ```json
 {
   "mensaje": "Compra simulada exitosa",
   "resumen": [
-    {
-      "id": "507f1f77bcf86cd799439011",
-      "nombre": "Laptop ASUS VivoBook 15",
-      "cantidad": 2,
-      "stockRestante": 6
-    }
+    { "id": "507f1f77bcf86cd799439011", "nombre": "Laptop ASUS VivoBook 15", "cantidad": 2, "stockRestante": 6 },
+    { "id": "507f1f77bcf86cd799439012", "nombre": "Mouse Logitech MX Master 3", "cantidad": 1, "stockRestante": 11 }
   ]
 }
 ```
 
-**Errors:**
-- `400`: Items inválidos
-- `409`: Stock insuficiente para algún producto (se revierte todo)
+**Errores:**
+- `400` — Items vacíos o datos inválidos
+- `409` — Stock insuficiente para algún producto (todo el checkout se revierte)
 
 ---
 
-### 5.4 Productos (Admin - Protegido)
+### 6.3 Productos — Rutas protegidas (admin)
 
-**Header requerido:**
+Todas requieren el header:
 ```
 Authorization: Bearer <jwt_token>
 ```
 
-#### POST `/productos`
+---
+
+#### `POST /productos`
 Crea un nuevo producto.
 
 **Request:**
 ```json
 {
-  "nombre": "Auriculares Sony WH-1000XM5",
-  "descripcion": "Auriculares con cancelación activa de ruido",
-  "precio": 449999,
-  "stock": 15,
-  "categoria": "Audio",
-  "minimoStock": 3,
-  "imagen": "https://example.com/sony.jpg",
+  "nombre": "Samsung Galaxy A55",
+  "descripcion": "Pantalla AMOLED 6.6\", cámara 50MP, batería 5000mAh",
+  "precio": 1199000,
+  "stock": 10,
+  "categoria": "Celulares",
+  "minimoStock": 2,
+  "imagen": "https://example.com/galaxy-a55.jpg",
   "activo": true
 }
 ```
 
-**Response (201):**
-```json
-{
-  "_id": "507f1f77bcf86cd799439013",
-  "nombre": "Auriculares Sony WH-1000XM5",
-  ...
-}
-```
+**Response `201`:** objeto producto creado completo
 
-**Errors:**
-- `400`: Campos obligatorios faltantes
-- `401`: Token no proporcionado o inválido
+**Errores:**
+- `400` — Campos obligatorios faltantes o validación de schema fallida
+- `401` — Token no proporcionado o inválido
 
 ---
 
-#### PUT `/productos/:id`
-Actualiza un producto existente.
+#### `PUT /productos/:id`
+Actualiza uno o más campos de un producto. Solo se envían los campos a modificar.
 
-**Request:**
+**Request (parcial):**
 ```json
 {
-  "precio": 429999,
-  "stock": 20
+  "precio": 1099000,
+  "stock": 15
 }
 ```
 
-**Response (200):**
-```json
-{
-  "_id": "507f1f77bcf86cd799439013",
-  "precio": 429999,
-  "stock": 20,
-  ...
-}
-```
+**Response `200`:** objeto producto actualizado completo
 
-**Errors:**
-- `404`: Producto no encontrado
-- `401`: No autorizado
+**Errores:**
+- `400` — Validación fallida
+- `401` — No autorizado
+- `404` — Producto no encontrado
 
 ---
 
-#### DELETE `/productos/:id`
-Elimina un producto.
+#### `DELETE /productos/:id`
+Elimina permanentemente un producto.
 
-**Response (200):**
+**Response `200`:**
 ```json
-{
-  "mensaje": "Producto eliminado"
-}
+{ "mensaje": "Producto eliminado" }
 ```
 
-**Errors:**
-- `404`: Producto no encontrado
-- `401`: No autorizado
+**Errores:**
+- `401` — No autorizado
+- `404` — Producto no encontrado
 
 ---
 
-### 5.5 Dashboard (Admin - Protegido)
+#### `GET /productos/dashboard`
+Retorna métricas generales del inventario.
 
-#### GET `/productos/dashboard`
-Retorna métricas del inventario.
-
-**Response (200):**
+**Response `200`:**
 ```json
 {
-  "totalProductos": 8,
-  "activos": 7,
+  "totalProductos": 9,
+  "activos": 8,
   "countStockBajo": 2,
   "productosStockBajo": [
-    {
-      "_id": "507f1f77bcf86cd799439012",
-      "nombre": "Monitor LG 27 inch 144Hz",
-      "stock": 3,
-      "minimoStock": 2
-    },
-    {
-      "_id": "507f1f77bcf86cd799439014",
-      "nombre": "Mousepad SteelSeries QcK",
-      "stock": 1,
-      "minimoStock": 5
-    }
+    { "_id": "...", "nombre": "Mousepad SteelSeries QcK", "stock": 1, "minimoStock": 5 },
+    { "_id": "...", "nombre": "Webcam Logitech 4K Pro",   "stock": 0, "minimoStock": 2 }
   ]
 }
 ```
 
+> Un producto aparece en `productosStockBajo` cuando `stock <= minimoStock`.
+
 ---
 
-#### GET `/productos/stock-bajo`
-Obtiene productos con stock <= minimoStock.
+#### `GET /productos/stock-bajo`
+Listado completo de productos con stock por debajo del mínimo.
 
-**Response (200):**
+**Response `200`:**
 ```json
 {
   "total": 2,
   "data": [
-    {
-      "_id": "507f1f77bcf86cd799439014",
-      "nombre": "Mousepad SteelSeries QcK",
-      "stock": 1,
-      "minimoStock": 5
-    }
+    { "_id": "...", "nombre": "Mousepad SteelSeries QcK", "stock": 1, "minimoStock": 5, ... }
   ]
 }
 ```
 
 ---
 
-## 6. Códigos de Estado HTTP
+## 7. Códigos de Estado HTTP
 
-| Código | Significado | Ejemplo |
-|--------|-------------|---------|
-| 200    | OK - Éxito  | GET producto exitoso |
-| 201    | Created - Recurso creado | POST producto |
-| 400    | Bad Request - Datos inválidos | Falta campo requerido |
-| 401    | Unauthorized - Sin autenticación | Token inválido/faltante |
-| 403    | Forbidden - Sin permisos | No se necesita en este proyecto |
-| 404    | Not Found - Recurso no existe | GET de producto inexistente |
-| 409    | Conflict - Conflicto de datos | Stock insuficiente en checkout |
-| 500    | Server Error - Error del servidor | Error de BD |
-
----
-
-## 7. Validaciones y Seguridad
-
-### Validaciones en Backend
-
-- **Campos requeridos:** nombre, descripción, precio, stock, categoría
-- **Tipos de datos:** precio >= 0, stock >= 0 (enteros)
-- **Búsqueda SQL injection prevention:** Regex con `$regex` de Mongoose (seguro)
-- **Contraseñas:** Hasheadas con bcryptjs (salt: 10 rounds)
-- **JWT:** Verificado en cada ruta protegida
-
-### Medidas de Seguridad
-
-1. **JWT para admin:** Token con expiración de 8 horas
-2. **CORS habilitado:** Para permitir frontend desde localhost
-3. **.env para credenciales:** No subir `.env` al repositorio
-4. **Validación de entrada:** Campos requeridos y tipos
-5. **Manejo de errores:** Mensajes claros sin exponer detalles internos
-
-### Operaciones Atómicas
-
-**Checkout:**
-- Se decrementa stock **solo si hay suficiente** (operación `$gte` en BD)
-- Si algún item falla, se revierte (rollback) el stock de items anteriores
-- Evita condiciones de carrera en ventas simultáneas
+| Código | Significado | Cuándo ocurre |
+|---|---|---|
+| `200` | OK | Petición exitosa (GET, PUT, DELETE, checkout, login) |
+| `201` | Created | Producto creado exitosamente (POST /productos) |
+| `400` | Bad Request | Datos inválidos o campos requeridos faltantes |
+| `401` | Unauthorized | Token ausente, inválido o expirado |
+| `404` | Not Found | Producto no encontrado por ID |
+| `409` | Conflict | Stock insuficiente durante checkout |
+| `500` | Server Error | Error interno del servidor o de conexión a BD |
 
 ---
 
 ## 8. Instalación y Despliegue Local
 
-### Requisitos
-- Node.js 18+
-- MongoDB community o conexión a MongoDB Atlas
+### Requisitos previos
+
+- Node.js 18 o superior
+- Acceso a MongoDB Atlas (o instancia local de MongoDB)
 - npm
 
 ### Pasos
 
-1. **Clonar/Extraer repositorio**
-   ```bash
-   cd D:\Desktop\Documentos\TechStore\backend
-   ```
-
-2. **Instalar dependencias**
-   ```bash
-   npm install
-   ```
-
-3. **Configurar variables de entorno**
-   ```bash
-   copy .env.example .env
-   # Editar .env y establecer MONGODB_URI
-   ```
-
-4. **Crear usuario admin**
-   ```bash
-   npm run seed-admin
-   ```
-
-5. **Crear productos de prueba (opcional)**
-   ```bash
-   npm run seed-productos
-   ```
-
-6. **Iniciar servidor en desarrollo**
-   ```bash
-   npm run dev
-   # O en producción:
-   npm start
-   ```
-
-7. **Verificar**
-   ```
-   http://localhost:3000/ → Debe devolver "TechStore API funcionando"
-   ```
-
----
-
-## 9. Frontend - Estructura de Archivos
-
-```
-frontend/
-├── index.html           # Catálogo público
-├── detalle.html         # Detalle de producto
-├── carrito.html         # Carrito y checkout
-├── admin-login.html     # Login para admin
-├── admin.html           # Panel administrativo
-├── styles.css           # Estilos globales
-└── js/
-    ├── api.js           # Cliente API (TechStoreAPI class)
-    ├── carrito.js       # Gestor del carrito (localStorage)
-    ├── catalogo.js      # Lógica de página de catálogo
-    ├── detalle.js       # Lógica de página de detalle
-    ├── carrito-page.js  # Lógica de página de carrito
-    ├── admin-login.js   # Lógica de login admin
-    └── admin-panel.js   # Lógica de panel admin (CRUD)
+**1. Clonar el repositorio**
+```bash
+git clone https://github.com/yorleynermc/TechStore.git
+cd TechStore
 ```
 
-### Flujo Frontend
+**2. Instalar dependencias del backend**
+```bash
+cd backend
+npm install
+```
 
-1. **index.html** → Carga productos públicos con filtros y paginación
-2. **detalle.html** → Muestra información completa de producto seleccionado
-3. **carrito.html** → Gestiona carrito (localStorage) y simula checkout
-4. **admin-login.html** → Autentica admin y obtiene JWT
-5. **admin.html** → CRUD de productos y dashboard con métricas
+**3. Configurar variables de entorno**
+```bash
+# Windows
+copy .env.example .env
 
----
+# macOS / Linux
+cp .env.example .env
+```
 
-## 10. Variables de Entorno (.env)
-
+Edita `.env` con los valores correctos:
 ```dotenv
 PORT=3000
-MONGODB_URI=mongodb://localhost:27017/techstore
-# O para MongoDB Atlas:
-# MONGODB_URI=mongodb+srv://usuario:password@cluster.mongodb.net/techstore?retryWrites=true&w=majority
-
-# Opcional (generado automáticamente si no se define):
-JWT_SECRET=secretkey
+MONGODB_URI=mongodb+srv://techstore_admin:<password>@cluster0.mlcprrs.mongodb.net/techstore?retryWrites=true&w=majority
+JWT_SECRET=una_clave_secreta_segura
 ```
+
+**4. Crear el usuario administrador**
+```bash
+npm run seed-admin
+```
+Crea el usuario `techstore_admin` con contraseña `techstore_admin123` si no existe.
+
+**5. Poblar productos de prueba (opcional)**
+```bash
+npm run seed-productos
+```
+Inserta 8 productos de ejemplo si la colección está vacía.
+
+**6. Iniciar el servidor**
+```bash
+# Desarrollo (recarga automática)
+npm run dev
+
+# Producción
+npm start
+```
+
+**7. Verificar**
+```
+GET http://localhost:3000/
+→ "TechStore API funcionando"
+```
+
+**8. Abrir el frontend**
+
+Abre directamente en el navegador el archivo `frontend/index.html`, o sirve la carpeta con un servidor estático:
+```bash
+# Con Node.js (sin instalación extra)
+npx serve frontend
+
+# Con Python
+python -m http.server 8080 --directory frontend
+```
+
+> En local, `api.js` detecta `localhost` y apunta al backend en `http://localhost:3000/api` en lugar de usar el proxy de Netlify.
 
 ---
 
-## 11. Consideraciones de Despliegue en Producción
+## 9. Variables de Entorno
 
-1. **Usar variables de entorno en hosting** (Render, Railway, etc.)
-2. **Cambiar JWT_SECRET a un valor seguro** (generar con openssl)
-3. **Usar HTTPS** en producción
-4. **Configurar CORS correctamente** con dominio del frontend
-5. **Usar MongoDB Atlas** en lugar de local
-6. **Agregar rate limiting** (express-rate-limit)
-7. **Implementar compresión** (compression middleware)
-8. **Logs y monitoreo** (winston, Sentry)
+| Variable | Descripción | Requerida |
+|---|---|---|
+| `MONGODB_URI` | URI de conexión a MongoDB Atlas | Sí |
+| `JWT_SECRET` | Clave secreta para firmar tokens JWT | Sí (default débil si se omite) |
+| `PORT` | Puerto del servidor (default: 3000) | No |
+
+> En Render, estas variables se configuran en el dashboard del servicio en **Environment → Add Environment Variable**.
 
 ---
 
-## 12. Testing Manual con Postman/Insomnia
+## 10. Despliegue en Producción
 
-### 1. Login
+### Frontend — Netlify
+
+1. Conectar el repositorio de GitHub en Netlify
+2. Configurar:
+   - **Publish directory:** `frontend`
+   - **Build command:** (vacío, es un sitio estático)
+3. El archivo `netlify.toml` ya incluye la regla de proxy para `/api/*`
+4. Netlify redespliega automáticamente en cada `git push` a `main`
+
+### Backend — Render
+
+1. Crear un servicio de tipo **Web Service** en Render
+2. Conectar el repositorio de GitHub
+3. Configurar:
+   - **Root directory:** `backend`
+   - **Build command:** `npm install`
+   - **Start command:** `npm start`
+4. Agregar las variables de entorno `MONGODB_URI` y `JWT_SECRET` en el dashboard de Render
+5. El archivo `render.yaml` define estas opciones para despliegue como Infrastructure as Code
+
+---
+
+## 11. Testing Manual con Postman / Insomnia
+
+### 1. Login (obtener token)
 ```
-POST http://localhost:3000/api/auth/login
-Body (JSON):
+POST https://techstore-backend-i9kh.onrender.com/api/auth/login
+Content-Type: application/json
+
 {
   "username": "techstore_admin",
   "password": "techstore_admin123"
 }
 ```
-Guardar token en variable de entorno.
+Guardar el `token` retornado en una variable de entorno de Postman/Insomnia.
 
-### 2. Crear Producto
+### 2. Listar productos con filtros
 ```
-POST http://localhost:3000/api/productos
-Headers: Authorization: Bearer {{token}}
-Body (JSON):
+GET https://techstore-backend-i9kh.onrender.com/api/productos?categoria=Audio&q=sony&page=1&limit=5
+```
+
+### 3. Obtener detalle de producto
+```
+GET https://techstore-backend-i9kh.onrender.com/api/productos/{{product_id}}
+```
+
+### 4. Crear producto (requiere token)
+```
+POST https://techstore-backend-i9kh.onrender.com/api/productos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
 {
-  "nombre": "Test Producto",
-  "descripcion": "Descripción test",
-  "precio": 99999,
-  "stock": 10,
+  "nombre": "Auriculares Sony WH-1000XM5",
+  "descripcion": "Cancelación activa de ruido, 30 horas de batería",
+  "precio": 449999,
+  "stock": 15,
   "categoria": "Audio",
-  "minimoStock": 2
+  "minimoStock": 3,
+  "activo": true
 }
 ```
 
-### 3. Listar Productos
+### 5. Checkout (sin autenticación)
 ```
-GET http://localhost:3000/api/productos?categoria=Audio&page=1&limit=5
-```
+POST https://techstore-backend-i9kh.onrender.com/api/productos/carrito/checkout
+Content-Type: application/json
 
-### 4. Checkout (sin auth)
-```
-POST http://localhost:3000/api/productos/carrito/checkout
-Body (JSON):
 {
   "items": [
     { "productId": "{{product_id}}", "cantidad": 2 }
@@ -592,48 +641,87 @@ Body (JSON):
 }
 ```
 
+### 6. Dashboard (requiere token)
+```
+GET https://techstore-backend-i9kh.onrender.com/api/productos/dashboard
+Authorization: Bearer {{token}}
+```
+
 ---
 
-## 13. Fichas Técnicas de Dependencias
+## 12. Ficha Técnica de Dependencias
+
+### Backend
 
 | Dependencia | Versión | Propósito |
-|-------------|---------|-----------|
-| express | ^5.2.1 | Framework web |
+|---|---|---|
+| express | ^5.2.1 | Framework web HTTP |
 | mongoose | ^8.24.0 | ODM para MongoDB |
-| jsonwebtoken | ^9.0.2 | Autenticación JWT |
-| bcryptjs | ^2.4.3 | Hash de contraseñas |
-| cors | ^2.8.6 | CORS middleware |
-| dotenv | ^17.4.2 | Variables de entorno |
-| nodemon | ^3.1.14 | Dev server con reload |
+| jsonwebtoken | ^9.0.2 | Generación y verificación de JWT |
+| bcryptjs | ^2.4.3 | Hash de contraseñas (salt: 10 rounds) |
+| cors | ^2.8.6 | Middleware de CORS |
+| dotenv | ^17.4.2 | Carga de variables de entorno desde `.env` |
+| nodemon | ^3.1.14 | Recarga automática en desarrollo (devDependency) |
+
+### Frontend
+
+Sin dependencias externas. JavaScript vanilla puro con Fetch API nativa del navegador.
+
+---
+
+## 13. Validaciones y Seguridad
+
+### Validaciones del backend
+
+- **Campos requeridos:** `nombre`, `descripcion`, `precio`, `stock`, `categoria` validados antes de crear
+- **Tipos y rangos:** `precio >= 0`, `stock >= 0` enforceados por el schema de Mongoose
+- **Búsqueda segura:** `$regex` de Mongoose con `$options: 'i'` — no expuesto a inyección
+- **Contraseñas:** nunca almacenadas en texto plano; hash con bcryptjs (10 salt rounds)
+- **JWT:** verificado en cada petición a rutas protegidas; el middleware también confirma que el admin aún exista en BD (previene tokens huérfanos)
+
+### Checkout atómico
+
+```
+Para cada item:
+  Producto.findOneAndUpdate(
+    { _id: productId, stock: { $gte: cantidad } },
+    { $inc: { stock: -cantidad } }
+  )
+  → Si el resultado es null: stock insuficiente
+    → Rollback: restaurar stock de todos los items ya procesados
+    → Retornar 409 Conflict
+```
+
+Esta estrategia evita condiciones de carrera en ventas simultáneas sin necesidad de transacciones.
 
 ---
 
 ## 14. Troubleshooting
 
-| Problema | Causa | Solución |
-|----------|-------|----------|
-| Error conexión MongoDB | MongoDB no activo/URI inválida | Verificar MongoDB running y `.env` |
-| Token inválido | JWT expirado | Re-loguear admin |
-| Stock insuficiente en checkout | Cantidad > disponible | Validar stock en frontend |
-| CORS error | Frontend y backend en puertos diferentes | Verificar CORS config en server.js |
-| Productos no cargando | Error en API | Verificar console.log del backend |
+| Problema | Causa probable | Solución |
+|---|---|---|
+| Error de conexión a MongoDB | `MONGODB_URI` incorrecto o red bloqueada | Verificar variable de entorno; comprobar IP en MongoDB Atlas Network Access |
+| `401 Unauthorized` al llamar rutas admin | Token expirado (8 h) o no enviado | Re-loguear; verificar que el header `Authorization` se incluya |
+| `409 Conflict` en checkout | Stock insuficiente para uno o más items | Verificar stock en frontend antes de enviar; el backend revierte automáticamente |
+| Productos no cargan en el catálogo | Backend en Render inactivo (cold start) | El primer request puede tardar ~30 s; volver a intentar |
+| CORS error en desarrollo local | Frontend y backend en puertos distintos | El `cors()` en `server.js` está configurado sin restricciones; verificar que el backend esté corriendo |
+| El panel admin redirige al login tras recargar | `localStorage` bloqueado o borrado | Verificar configuración de privacidad del navegador |
 
 ---
 
 ## 15. Próximas Mejoras Sugeridas
 
-1. Implementar paginación en admin (actualmente carga todos)
-2. Subida de imágenes con multer (en lugar de URLs)
-3. Tests automáticos (jest + supertest)
-4. Roles y permisos granulares
-5. Historial de cambios en productos
-6. Sistema de órdenes real (no solo simulado)
-7. Notificaciones por email
-8. Analytics y reportes
+1. Paginación en el panel admin (actualmente carga hasta 100 productos)
+2. Carga directa de imágenes con multer (actualmente solo URLs)
+3. Tests automáticos con jest + supertest
+4. Rate limiting en la API (express-rate-limit)
+5. Sistema de órdenes real con historial de compras
+6. Roles y permisos granulares (administrador / editor / solo lectura)
+7. Notificaciones por email al detectar stock bajo
+8. Compresión de respuestas con middleware `compression`
 
 ---
 
-**Autor:** Manolo Pajaro Borras  
-**Fecha:** Junio 2026  
-**Versión:** 1.0
-
+**Autor:** Yorleyner MC
+**Fecha:** Junio 2026
+**Versión:** 1.1
