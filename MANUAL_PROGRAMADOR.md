@@ -135,8 +135,6 @@ TechStore/
 │   ├── server.js                # Punto de entrada: Express, middleware, rutas
 │   ├── package.json             # Dependencias y scripts npm
 │   ├── .env.example             # Plantilla de variables de entorno
-│   ├── seedAdmin.js             # Script para crear el usuario admin inicial
-│   ├── seedProductos.js         # Script para poblar productos de prueba
 │   └── src/
 │       ├── config/
 │       │   └── database.js      # Conexión a MongoDB con Mongoose
@@ -510,19 +508,7 @@ MONGODB_URI=mongodb+srv://techstore_admin:<password>@cluster0.mlcprrs.mongodb.ne
 JWT_SECRET=una_clave_secreta_segura
 ```
 
-**4. Crear el usuario administrador**
-```bash
-npm run seed-admin
-```
-Crea el usuario `techstore_admin` con contraseña `techstore_admin123` si no existe.
-
-**5. Poblar productos de prueba (opcional)**
-```bash
-npm run seed-productos
-```
-Inserta 8 productos de ejemplo si la colección está vacía.
-
-**6. Iniciar el servidor**
+**4. Iniciar el servidor**
 ```bash
 # Desarrollo (recarga automática)
 npm run dev
